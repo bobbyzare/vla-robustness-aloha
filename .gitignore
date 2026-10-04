@@ -1,0 +1,9 @@
+outputs/
+wandb/
+__pycache__/
+*.pyc
+*.pt
+*.safetensors
+*.mp4
+.ipynb_checkpoints/
+.env
