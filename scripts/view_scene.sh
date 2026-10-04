@@ -29,14 +29,13 @@ fi
 
 # 3. Find where pip installed gym_aloha's scene files (MJCF XML + STL meshes).
 ASSETS="$(python -c 'import gym_aloha, os; print(os.path.join(os.path.dirname(gym_aloha.__file__), "assets"))')"
-SCENE="bimanual_viperx_${TASK}.xml"
+SCENE="$ASSETS/bimanual_viperx_${TASK}.xml"
 
 # 4. The viewer needs a real window. MUJOCO_GL=egl (off-screen rendering for our
 #    experiments) would block that, so clear it for this script only.
 unset MUJOCO_GL
 
-# 5. Run from the assets folder: the XML includes scene.xml, the arm files and the
-#    meshes by relative name, so they must be found next to it.
-echo "Opening $SCENE from $ASSETS"
-cd "$ASSETS"
+# 5. Open the viewer. MuJoCo finds the included files (scene.xml, arm files,
+#    meshes) relative to the XML file itself, so no `cd` is needed.
+echo "Opening $SCENE"
 exec python -m mujoco.viewer --mjcf="$SCENE"
