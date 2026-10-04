@@ -7,3 +7,13 @@ __pycache__/
 *.mp4
 .ipynb_checkpoints/
 .env
+
+# Training / eval artefacts
+checkpoints/
+*.ckpt
+data/
+.cache/
+
+# GIFs only allowed in media/ (small README clips)
+*.gif
+!media/*.gif
