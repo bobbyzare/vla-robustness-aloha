@@ -13,3 +13,6 @@ Status: work in progress.
 - Headless rendering: `MUJOCO_GL=egl`
 
 Check a machine with: `python scripts/check_setup.py`
+
+Look at a simulation scene in MuJoCo's 3D viewer (needs a display, e.g. WSLg):
+`bash scripts/view_scene.sh [transfer_cube|insertion]`
