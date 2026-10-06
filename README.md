@@ -16,3 +16,15 @@ Check a machine with: `python scripts/check_setup.py`
 
 Look at a simulation scene in MuJoCo's 3D viewer (needs a display, e.g. WSLg):
 `bash scripts/view_scene.sh [transfer_cube|insertion]`
+
+## Results
+
+### Phase 1: pretrained ACT baseline (Transfer Cube, standard scene)
+
+| Policy | Task | Episodes | Seeds | Success | 95% CI |
+|---|---|---|---|---|---|
+| `lerobot/act_aloha_sim_transfer_cube_human` (migrated) | AlohaTransferCube-v0 | 50 | 1000-1049 | 38/50 (76.0%) | 62.6-85.7% |
+
+Raw output: `analysis/results/phase1_act_pretrained_transfer_cube.json`. Reproduce: `bash eval/phase1_baseline.sh`.
+
+Note: gym-aloha counts an episode as a success when the left gripper touches the cube while it is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp.
