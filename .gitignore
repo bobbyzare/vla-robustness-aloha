@@ -18,5 +18,5 @@ data/
 *.gif
 !media/*.gif
 
-# Personal project brief (kept local, not published)
+# Personal project brief 
 CLAUDE.md
