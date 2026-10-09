@@ -1,17 +1,27 @@
 # Visual robustness of learned manipulation policies (ALOHA sim)
 
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="media/act_transfer_cube_success_seed1004.gif" width="100%" alt="ACT policy hands the cube from the right arm to the left arm"><br>
+      <b>Success</b> (seed 1004)<br>
+      <sub>The cube is lifted and passed to the left arm.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="media/act_transfer_cube_failure_seed1005.gif" width="100%" alt="ACT policy lifts the cube but loses it before the handover"><br>
+      <b>Failure</b> (seed 1005)<br>
+      <sub>The cube is lifted but lost before the handover.</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><sub>Pretrained ACT on the ALOHA Transfer Cube task, from the 50-episode baseline evaluation below.<br>The view is the top camera, the only image the policy sees.</sub></p>
+
 > **Status: work in progress.** The setup and the first baseline are done; training, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
 
 ## Question
 
 How robust are learned robot manipulation policies to visual changes that happen on a real factory floor, such as different lighting, a shifted camera or clutter on the table?
-
-| Success | Failure |
-|---|---|
-| ![ACT success, seed 1004](media/act_transfer_cube_success_seed1004.gif) | ![ACT failure, seed 1005](media/act_transfer_cube_failure_seed1005.gif) |
-| Seed 1004: the cube is lifted and passed to the left arm. | Seed 1005: the cube is lifted but lost before the handover. |
-
-Pretrained ACT on Transfer Cube, from the 50-episode baseline evaluation below. The view is the top camera, the only image the policy sees.
 
 ## Approach
 
