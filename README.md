@@ -6,6 +6,13 @@
 
 How robust are learned robot manipulation policies to visual changes that happen on a real factory floor, such as different lighting, a shifted camera or clutter on the table?
 
+| Success | Failure |
+|---|---|
+| ![ACT success, seed 1004](media/act_transfer_cube_success_seed1004.gif) | ![ACT failure, seed 1005](media/act_transfer_cube_failure_seed1005.gif) |
+| Seed 1004: the cube is lifted and passed to the left arm. | Seed 1005: the cube is lifted but lost before the handover. |
+
+Pretrained ACT on Transfer Cube, from the 50-episode baseline evaluation below. The view is the top camera, the only image the policy sees.
+
 ## Approach
 
 Two policies are trained by imitation learning on the same simulated task and evaluated first in the standard scene, then under controlled visual perturbations.
@@ -68,10 +75,11 @@ scripts/
   check_setup.py          checks Python env, GPU, LeRobot and headless rendering
   view_scene.sh           opens a task scene in the MuJoCo 3D viewer
   watch_policy.py         watch a policy control the robot live in the viewer
+  make_gif.py             turn an evaluation video into a small GIF for this README
 analysis/results/         raw evaluation outputs (every reported number comes from here)
+media/                    GIFs (and later plots) for this README
 perturbations/            visual scene changes (planned)
 notebooks/                Colab training notebook (planned)
-media/                    plots and GIFs for this README (planned)
 ```
 
 ## How to reproduce
