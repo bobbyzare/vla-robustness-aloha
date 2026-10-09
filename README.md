@@ -1,30 +1,104 @@
 # Visual robustness of learned manipulation policies (ALOHA sim)
 
-**Question:** How robust are learned manipulation policies to visual changes that happen on a real factory floor (lighting, camera position, clutter)?
+> **Status: work in progress.** The setup and the first baseline are done; training, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
 
-We compare ACT and SmolVLA on the ALOHA Insertion task in MuJoCo simulation, first under standard conditions and then under visual perturbations.
+## Question
 
-Status: work in progress.
+How robust are learned robot manipulation policies to visual changes that happen on a real factory floor, such as different lighting, a shifted camera or clutter on the table?
 
-## Environment
+## Approach
 
-- LeRobot commit: `8c920c4270460851cedd2737657584586d3dc66f` (lerobot 0.6.2)
-- PyTorch 2.11.0 (CUDA 13.0), Python 3.12
-- Headless rendering: `MUJOCO_GL=egl`
+Two policies are trained by imitation learning on the same simulated task and evaluated first in the standard scene, then under controlled visual perturbations.
 
-Check a machine with: `python scripts/check_setup.py`
+| | |
+|---|---|
+| Policy A | ACT (Action Chunking Transformer) |
+| Policy B | SmolVLA, fine-tuned from `lerobot/smolvla_base` |
+| Framework | [Hugging Face LeRobot](https://github.com/huggingface/lerobot) |
+| Simulator | ALOHA bimanual robot in MuJoCo ([gym-aloha](https://github.com/huggingface/gym-aloha)) |
+| Tasks | Transfer Cube (pipeline check), Insertion (main experiment) |
+| Perturbations (planned) | lighting, camera pose, distractor objects, table colour; 2-3 severity levels each |
 
-Look at a simulation scene in MuJoCo's 3D viewer (needs a display, e.g. WSLg):
-`bash scripts/view_scene.sh [transfer_cube|insertion]`
+Each condition is evaluated for 50 episodes with fixed seeds, and both policies see the same seeds.
 
-## Results
+## Progress
 
-### Phase 1: pretrained ACT baseline (Transfer Cube, standard scene)
+- [x] Setup verified: GPU, LeRobot, headless MuJoCo rendering
+- [x] Baseline: pretrained ACT on Transfer Cube
+- [ ] Train own ACT on Transfer Cube (Colab)
+- [ ] Train ACT on Insertion
+- [ ] Fine-tune SmolVLA on Insertion
+- [ ] Visual perturbations
+- [ ] Evaluation harness (per-episode CSV, resumable)
+- [ ] Analysis and write-up
+
+## Results so far
+
+### Baseline: pretrained ACT, Transfer Cube, standard scene
 
 | Policy | Task | Episodes | Seeds | Success | 95% CI |
 |---|---|---|---|---|---|
-| `lerobot/act_aloha_sim_transfer_cube_human` (migrated) | AlohaTransferCube-v0 | 50 | 1000-1049 | 38/50 (76.0%) | 62.6-85.7% |
+| `lerobot/act_aloha_sim_transfer_cube_human` | AlohaTransferCube-v0 | 50 | 1000-1049 | 38/50 (76.0%) | 62.6-85.7% |
 
-Raw output: `analysis/results/phase1_act_pretrained_transfer_cube.json`. Reproduce: `bash eval/phase1_baseline.sh`.
+Highest reward stage reached per episode:
 
-Note: gym-aloha counts an episode as a success when the left gripper touches the cube while it is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp.
+| Stage | Meaning | Episodes |
+|---|---|---|
+| 0 | cube never touched | 1 |
+| 1 | right gripper touched the cube | 3 |
+| 2 | cube lifted, no handover | 8 |
+| 4 | success | 38 |
+
+Most failures happen at the handover between the two arms, not at the first grasp.
+
+Raw output: [`analysis/results/phase1_act_pretrained_transfer_cube.json`](analysis/results/phase1_act_pretrained_transfer_cube.json)
+
+## Notes on the evaluation
+
+- **Success criterion.** gym-aloha counts an episode as a success as soon as the left gripper touches the cube while the cube is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp, so the success rate is optimistic compared with a completed handover. All policies and conditions are scored with the same rule.
+- **Checkpoint format.** The pretrained checkpoint on the Hub was saved by an older LeRobot version. It is converted locally with LeRobot's `migrate_policy_normalization.py`, which moves the normalization statistics out of the weights; the network weights are unchanged.
+- **Uncertainty.** With 50 episodes per condition the 95% confidence interval spans up to about ±14 percentage points, so small differences between conditions are not meaningful.
+
+## Repository layout
+
+```
+eval/
+  phase1_baseline.sh      pretrained ACT baseline with lerobot-eval
+scripts/
+  check_setup.py          checks Python env, GPU, LeRobot and headless rendering
+  view_scene.sh           opens a task scene in the MuJoCo 3D viewer
+  watch_policy.py         watch a policy control the robot live in the viewer
+analysis/results/         raw evaluation outputs (every reported number comes from here)
+perturbations/            visual scene changes (planned)
+notebooks/                Colab training notebook (planned)
+media/                    plots and GIFs for this README (planned)
+```
+
+## How to reproduce
+
+Requirements: Linux or WSL2, an NVIDIA GPU, conda, and LeRobot installed from source with the `aloha` extra.
+
+```bash
+conda activate lerobot
+
+# 1. check the setup
+MUJOCO_GL=egl python scripts/check_setup.py
+
+# 2. pretrained ACT baseline (50 episodes, about 40 min on a GTX 1650)
+bash eval/phase1_baseline.sh
+
+# optional: look at the scene, or watch the policy live (needs a display)
+bash scripts/view_scene.sh
+python scripts/watch_policy.py --episodes 3
+```
+
+## Environment
+
+| | |
+|---|---|
+| LeRobot | 0.6.2, commit `8c920c4270460851cedd2737657584586d3dc66f` |
+| PyTorch | 2.11.0 (CUDA 13.0) |
+| MuJoCo | 3.8.1 |
+| Python | 3.12 |
+| Local GPU | NVIDIA GTX 1650, 4 GB (evaluation only) |
+| Training | Google Colab, T4 (planned) |
