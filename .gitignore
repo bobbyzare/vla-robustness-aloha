@@ -17,3 +17,6 @@ data/
 # GIFs only allowed in media/ (small README clips)
 *.gif
 !media/*.gif
+
+# Personal project brief (kept local, not published)
+CLAUDE.md
