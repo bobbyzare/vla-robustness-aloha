@@ -15,9 +15,28 @@
   </tr>
 </table>
 
-<p align="center"><sub>Pretrained ACT on the ALOHA Transfer Cube task, from the 50-episode baseline evaluation below.<br>The view is the top camera, the only image the policy sees.</sub></p>
+<p align="center"><sub><b>Transfer Cube:</b> pass a cube from the right arm to the left arm.</sub></p>
 
-> **Status: work in progress.** The setup, the pretrained baseline and the first own training run (ACT on Transfer Cube) are done; the Insertion task, SmolVLA, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="media/act_insertion_success_seed1001.gif" width="100%" alt="ACT policy grasps peg and socket and inserts the peg in mid-air"><br>
+      <b>Success</b> (seed 1001)<br>
+      <sub>Peg and socket are lifted, brought together and the peg is inserted.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="media/act_insertion_failure_seed1000.gif" width="100%" alt="ACT policy brings peg and socket together but does not insert the peg"><br>
+      <b>Failure</b> (seed 1000)<br>
+      <sub>Peg and socket are brought together, but the peg is not inserted before the time limit.</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><sub><b>Insertion</b> (main task): pick up a red peg and a blue socket and insert the peg in mid-air.</sub></p>
+
+<p align="center"><sub>Pretrained ACT models, from the 50-episode baseline evaluations below.<br>The view is the top camera, the only image the policy sees.</sub></p>
+
+> **Status: work in progress.** The setup, the pretrained baselines on both tasks and the first own training run (ACT on Transfer Cube) are done; own ACT on Insertion, SmolVLA, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
 
 ## Question
 
@@ -43,7 +62,8 @@ Each condition is evaluated for 50 episodes with fixed seeds, and both policies 
 - [x] Setup verified: GPU, LeRobot, headless MuJoCo rendering
 - [x] Baseline: pretrained ACT on Transfer Cube
 - [x] Train own ACT on Transfer Cube (Colab)
-- [ ] Train ACT on Insertion
+- [x] Baseline: pretrained ACT on Insertion
+- [ ] Train own ACT on Insertion
 - [ ] Fine-tune SmolVLA on Insertion
 - [ ] Visual perturbations
 - [ ] Evaluation harness (per-episode CSV, resumable)
@@ -104,10 +124,33 @@ The own model is 4 episodes (8 percentage points) below the pretrained model. Th
 
 Raw output: [`analysis/results/phase2_act_own_transfer_cube.json`](analysis/results/phase2_act_own_transfer_cube.json)
 
+### Baseline: pretrained ACT, Insertion, standard scene
+
+Insertion is the main task of the experiment: one arm picks up a peg, the other a socket, and the peg has to be inserted in mid-air.
+
+| Policy | Task | Episodes | Seeds | Success | 95% CI |
+|---|---|---|---|---|---|
+| `lerobot/act_aloha_sim_insertion_human` | AlohaInsertion-v0 | 50 | 1000-1049 | 9/50 (18.0%) | 9.8-30.8% |
+
+Highest reward stage reached per episode:
+
+| Stage | Meaning | Episodes |
+|---|---|---|
+| 0 | the two grippers never touch peg and socket at the same time | 12 |
+| 1 | both grippers touch peg and socket | 8 |
+| 2 | peg and socket both grasped and lifted | 2 |
+| 3 | peg touches the socket in the air, not inserted | 19 |
+| 4 | success: peg touches the pin inside the socket | 9 |
+
+Insertion is much harder than Transfer Cube for the same kind of model (18% against 76%). Failures cluster at two points: the final precise insertion (stage 3, 19 episodes) and the first grasp of both objects (stage 0, 12 episodes).
+
+Raw output: [`analysis/results/phase3_act_pretrained_insertion.json`](analysis/results/phase3_act_pretrained_insertion.json)
+
 ## Notes on the evaluation
 
-- **Success criterion.** gym-aloha counts an episode as a success as soon as the left gripper touches the cube while the cube is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp, so the success rate is optimistic compared with a completed handover. All policies and conditions are scored with the same rule.
-- **Checkpoint format.** The pretrained checkpoint on the Hub was saved by an older LeRobot version. It is converted locally with LeRobot's `migrate_policy_normalization.py`, which moves the normalization statistics out of the weights; the network weights are unchanged. The own model was trained with the current LeRobot version and is evaluated directly from the Hub.
+- **Success criterion.** For Transfer Cube, gym-aloha counts an episode as a success as soon as the left gripper touches the cube while the cube is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp, so the success rate is optimistic compared with a completed handover. All policies and conditions are scored with the same rule. For Insertion, an episode counts as a success when the peg touches the pin inside the socket.
+- **Episode length.** `lerobot-eval` stops every ALOHA episode after 400 steps (8 s). The Insertion demonstrations are 500 steps long, so a policy that moves at human speed can run out of time. This is LeRobot's default setting and applies to every policy and condition in this project.
+- **Checkpoint format.** The pretrained checkpoints on the Hub were saved by an older LeRobot version. Each is converted locally with LeRobot's `migrate_policy_normalization.py`, which moves the normalization statistics out of the weights; the network weights are unchanged. The own model was trained with the current LeRobot version and is evaluated directly from the Hub.
 - **Uncertainty.** With 50 episodes per condition the 95% confidence interval spans up to about ±14 percentage points, so small differences between conditions are not meaningful.
 
 ## Repository layout
@@ -141,9 +184,15 @@ MUJOCO_GL=egl python scripts/check_setup.py
 # 2. pretrained ACT baseline (50 episodes, about 40 min on a GTX 1650)
 bash eval/phase1_baseline.sh
 
-# 3. train ACT: open notebooks/train_colab.ipynb in Google Colab (T4)
+# 3. pretrained ACT baseline on Insertion (50 episodes, about 52 min on a GTX 1650)
+python ~/lerobot/src/lerobot/processor/migrate_policy_normalization.py \
+    --pretrained-path lerobot/act_aloha_sim_insertion_human \
+    --output-dir outputs/models/act_aloha_sim_insertion_human_migrated
+bash eval/evaluate.sh outputs/models/act_aloha_sim_insertion_human_migrated AlohaInsertion-v0 phase3_act_pretrained_insertion
 
-# 4. evaluate the trained model (50 episodes, about 42 min on a GTX 1650)
+# 4. train ACT: open notebooks/train_colab.ipynb in Google Colab (T4)
+
+# 5. evaluate the trained model (50 episodes, about 42 min on a GTX 1650)
 bash eval/evaluate.sh Wolvered/act_aloha_transfer_cube AlohaTransferCube-v0 phase2_act_own_transfer_cube
 
 # optional: look at the scene, or watch the policy live (needs a display)
