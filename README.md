@@ -72,7 +72,7 @@ Raw output: [`analysis/results/phase1_act_pretrained_transfer_cube.json`](analys
 
 ### Own ACT, Transfer Cube, standard scene
 
-ACT trained from scratch in Google Colab (T4) on the dataset `lerobot/aloha_sim_transfer_cube_human`, with the same settings as the pretrained model: 100,000 steps, batch size 8, learning rate 1e-5, chunk size 100, seed 1000. Checkpoints were saved to the Hub every 10,000 steps, and training was resumed from them across three Colab sessions.
+ACT trained in Google Colab (T4) on the dataset `lerobot/aloha_sim_transfer_cube_human`, with the same settings as the pretrained model (ResNet-18 image backbone initialised from ImageNet, the rest of the network from random weights): 100,000 steps, batch size 8, learning rate 1e-5, chunk size 100, seed 1000. Checkpoints were saved to the Hub every 10,000 steps, and training was resumed from them across three Colab sessions.
 
 Model: [`Wolvered/act_aloha_transfer_cube`](https://huggingface.co/Wolvered/act_aloha_transfer_cube)
 
