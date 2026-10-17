@@ -2,13 +2,13 @@
 
 <table align="center">
   <tr>
-    <td align="center" width="50%">
-      <img src="media/act_transfer_cube_success_seed1004.gif" width="100%" alt="ACT policy hands the cube from the right arm to the left arm"><br>
+    <td align="center" width="360">
+      <img src="media/act_transfer_cube_success_seed1004.gif" width="360" alt="ACT policy hands the cube from the right arm to the left arm"><br>
       <b>Success</b> (seed 1004)<br>
       <sub>The cube is lifted and passed to the left arm.</sub>
     </td>
-    <td align="center" width="50%">
-      <img src="media/act_transfer_cube_failure_seed1005.gif" width="100%" alt="ACT policy lifts the cube but loses it before the handover"><br>
+    <td align="center" width="360">
+      <img src="media/act_transfer_cube_failure_seed1005.gif" width="360" alt="ACT policy lifts the cube but loses it before the handover"><br>
       <b>Failure</b> (seed 1005)<br>
       <sub>The cube is lifted but lost before the handover.</sub>
     </td>
@@ -19,13 +19,13 @@
 
 <table align="center">
   <tr>
-    <td align="center" width="50%">
-      <img src="media/act_insertion_success_seed1001.gif" width="100%" alt="ACT policy grasps peg and socket and inserts the peg in mid-air"><br>
+    <td align="center" width="360">
+      <img src="media/act_insertion_success_seed1001.gif" width="360" alt="ACT policy grasps peg and socket and inserts the peg in mid-air"><br>
       <b>Success</b> (seed 1001)<br>
       <sub>Peg and socket are lifted, brought together and the peg is inserted.</sub>
     </td>
-    <td align="center" width="50%">
-      <img src="media/act_insertion_failure_seed1000.gif" width="100%" alt="ACT policy brings peg and socket together but does not insert the peg"><br>
+    <td align="center" width="360">
+      <img src="media/act_insertion_failure_seed1000.gif" width="360" alt="ACT policy brings peg and socket together but does not insert the peg"><br>
       <b>Failure</b> (seed 1000)<br>
       <sub>Peg and socket are brought together, but the peg is not inserted before the time limit.</sub>
     </td>
