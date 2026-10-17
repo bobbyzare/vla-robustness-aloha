@@ -17,7 +17,7 @@
 
 <p align="center"><sub>Pretrained ACT on the ALOHA Transfer Cube task, from the 50-episode baseline evaluation below.<br>The view is the top camera, the only image the policy sees.</sub></p>
 
-> **Status: work in progress.** The setup and the first baseline are done; training, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
+> **Status: work in progress.** The setup, the pretrained baseline and the first own training run (ACT on Transfer Cube) are done; the Insertion task, SmolVLA, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
 
 ## Question
 
@@ -42,7 +42,7 @@ Each condition is evaluated for 50 episodes with fixed seeds, and both policies 
 
 - [x] Setup verified: GPU, LeRobot, headless MuJoCo rendering
 - [x] Baseline: pretrained ACT on Transfer Cube
-- [ ] Train own ACT on Transfer Cube (Colab)
+- [x] Train own ACT on Transfer Cube (Colab)
 - [ ] Train ACT on Insertion
 - [ ] Fine-tune SmolVLA on Insertion
 - [ ] Visual perturbations
@@ -70,10 +70,44 @@ Most failures happen at the handover between the two arms, not at the first gras
 
 Raw output: [`analysis/results/phase1_act_pretrained_transfer_cube.json`](analysis/results/phase1_act_pretrained_transfer_cube.json)
 
+### Own ACT, Transfer Cube, standard scene
+
+ACT trained from scratch in Google Colab (T4) on the dataset `lerobot/aloha_sim_transfer_cube_human`, with the same settings as the pretrained model: 100,000 steps, batch size 8, learning rate 1e-5, chunk size 100, seed 1000. Checkpoints were saved to the Hub every 10,000 steps, and training was resumed from them across three Colab sessions.
+
+Model: [`Wolvered/act_aloha_transfer_cube`](https://huggingface.co/Wolvered/act_aloha_transfer_cube)
+
+| Policy | Task | Episodes | Seeds | Success | 95% CI |
+|---|---|---|---|---|---|
+| `Wolvered/act_aloha_transfer_cube` | AlohaTransferCube-v0 | 50 | 1000-1049 | 34/50 (68.0%) | 54.2-79.2% |
+
+Highest reward stage reached per episode:
+
+| Stage | Meaning | Episodes |
+|---|---|---|
+| 0 | cube never touched | 0 |
+| 1 | right gripper touched the cube | 6 |
+| 2 | cube lifted, no handover | 10 |
+| 4 | success | 34 |
+
+As with the pretrained model, most failures happen at the handover.
+
+Comparison with the pretrained model on the same 50 seeds:
+
+| | Episodes |
+|---|---|
+| both succeed | 31 |
+| both fail | 9 |
+| only pretrained succeeds | 7 |
+| only own model succeeds | 3 |
+
+The own model is 4 episodes (8 percentage points) below the pretrained model. The confidence intervals overlap, and an exact McNemar test on the 10 seeds where the two models disagree gives p = 0.34, so the difference is not statistically meaningful at 50 episodes. The training recipe reproduces the pretrained baseline within the precision of this evaluation.
+
+Raw output: [`analysis/results/phase2_act_own_transfer_cube.json`](analysis/results/phase2_act_own_transfer_cube.json)
+
 ## Notes on the evaluation
 
 - **Success criterion.** gym-aloha counts an episode as a success as soon as the left gripper touches the cube while the cube is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp, so the success rate is optimistic compared with a completed handover. All policies and conditions are scored with the same rule.
-- **Checkpoint format.** The pretrained checkpoint on the Hub was saved by an older LeRobot version. It is converted locally with LeRobot's `migrate_policy_normalization.py`, which moves the normalization statistics out of the weights; the network weights are unchanged.
+- **Checkpoint format.** The pretrained checkpoint on the Hub was saved by an older LeRobot version. It is converted locally with LeRobot's `migrate_policy_normalization.py`, which moves the normalization statistics out of the weights; the network weights are unchanged. The own model was trained with the current LeRobot version and is evaluated directly from the Hub.
 - **Uncertainty.** With 50 episodes per condition the 95% confidence interval spans up to about ±14 percentage points, so small differences between conditions are not meaningful.
 
 ## Repository layout
@@ -81,6 +115,7 @@ Raw output: [`analysis/results/phase1_act_pretrained_transfer_cube.json`](analys
 ```
 eval/
   phase1_baseline.sh      pretrained ACT baseline with lerobot-eval
+  evaluate.sh             evaluate any policy on an ALOHA task with the same settings
 scripts/
   check_setup.py          checks Python env, GPU, LeRobot and headless rendering
   view_scene.sh           opens a task scene in the MuJoCo 3D viewer
@@ -89,7 +124,8 @@ scripts/
 analysis/results/         raw evaluation outputs (every reported number comes from here)
 media/                    GIFs (and later plots) for this README
 perturbations/            visual scene changes (planned)
-notebooks/                Colab training notebook (planned)
+notebooks/
+  train_colab.ipynb       train ACT in Google Colab, checkpoints pushed to the Hub
 ```
 
 ## How to reproduce
@@ -105,6 +141,11 @@ MUJOCO_GL=egl python scripts/check_setup.py
 # 2. pretrained ACT baseline (50 episodes, about 40 min on a GTX 1650)
 bash eval/phase1_baseline.sh
 
+# 3. train ACT: open notebooks/train_colab.ipynb in Google Colab (T4)
+
+# 4. evaluate the trained model (50 episodes, about 42 min on a GTX 1650)
+bash eval/evaluate.sh Wolvered/act_aloha_transfer_cube AlohaTransferCube-v0 phase2_act_own_transfer_cube
+
 # optional: look at the scene, or watch the policy live (needs a display)
 bash scripts/view_scene.sh
 python scripts/watch_policy.py --episodes 3
@@ -119,4 +160,4 @@ python scripts/watch_policy.py --episodes 3
 | MuJoCo | 3.8.1 |
 | Python | 3.12 |
 | Local GPU | NVIDIA GTX 1650, 4 GB (evaluation only) |
-| Training | Google Colab, T4 (planned) |
+| Training | Google Colab, T4 |
