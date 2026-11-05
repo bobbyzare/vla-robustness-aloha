@@ -36,7 +36,7 @@
 
 <p align="center"><sub>Pretrained ACT models, from the 50-episode baseline evaluations below.<br>The view is the top camera, the only image the policy sees.</sub></p>
 
-> **Status: work in progress.** The setup, the pretrained baselines on both tasks and the first own training run (ACT on Transfer Cube) are done; own ACT on Insertion, SmolVLA, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
+> **Status: work in progress.** The setup, the pretrained baselines on both tasks and own ACT models on both tasks are done; SmolVLA, perturbations and the main comparison are still being built. Results are added only when the runs behind them are finished.
 
 ## Question
 
@@ -63,7 +63,7 @@ Each condition is evaluated for 50 episodes with fixed seeds, and both policies 
 - [x] Baseline: pretrained ACT on Transfer Cube
 - [x] Train own ACT on Transfer Cube (Colab)
 - [x] Baseline: pretrained ACT on Insertion
-- [ ] Train own ACT on Insertion
+- [x] Train own ACT on Insertion
 - [ ] Fine-tune SmolVLA on Insertion
 - [ ] Visual perturbations
 - [ ] Evaluation harness (per-episode CSV, resumable)
@@ -146,6 +146,43 @@ Insertion is much harder than Transfer Cube for the same kind of model (18% agai
 
 Raw output: [`analysis/results/phase3_act_pretrained_insertion.json`](analysis/results/phase3_act_pretrained_insertion.json)
 
+### Own ACT, Insertion, standard scene
+
+ACT trained in Google Colab (T4) on the dataset `lerobot/aloha_sim_insertion_human`, with the same recipe as the Transfer Cube model: 100,000 steps, batch size 8, learning rate 1e-5, chunk size 100, seed 1000, ResNet-18 backbone initialised from ImageNet. Checkpoints were saved to the Hub every 10,000 steps, and training was resumed from them across several Colab sessions.
+
+Model: [`Wolvered/act_aloha_insertion`](https://huggingface.co/Wolvered/act_aloha_insertion)
+
+| Policy | Task | Episodes | Seeds | Success | 95% CI |
+|---|---|---|---|---|---|
+| `Wolvered/act_aloha_insertion` | AlohaInsertion-v0 | 50 | 1000-1049 | 10/50 (20.0%) | 11.2-33.0% |
+
+Highest reward stage reached per episode:
+
+| Stage | Meaning | Episodes |
+|---|---|---|
+| 0 | the two grippers never touch peg and socket at the same time | 15 |
+| 1 | both grippers touch peg and socket | 9 |
+| 2 | peg and socket both grasped and lifted | 0 |
+| 3 | peg touches the socket in the air, not inserted | 16 |
+| 4 | success: peg touches the pin inside the socket | 10 |
+
+As with the pretrained model, failures cluster at the first grasp (stage 0) and the final insertion (stage 3).
+
+Comparison with the pretrained model on the same 50 seeds:
+
+| | Episodes |
+|---|---|
+| both succeed | 3 |
+| both fail | 34 |
+| only pretrained succeeds | 6 |
+| only own model succeeds | 7 |
+
+The own model is 1 episode above the pretrained model. An exact McNemar test on the 13 seeds where the two models disagree gives p = 1.0, so the two models perform the same within the precision of this evaluation. The training recipe reproduces the pretrained baseline on Insertion as well.
+
+The two models succeed on mostly different seeds (only 3 shared successes). On this task, whether an episode succeeds seems to depend less on the starting position than on small differences during the episode, so single-episode outcomes on Insertion are noisy.
+
+Raw output: [`analysis/results/phase3_act_own_insertion.json`](analysis/results/phase3_act_own_insertion.json)
+
 ## Notes on the evaluation
 
 - **Success criterion.** For Transfer Cube, gym-aloha counts an episode as a success as soon as the left gripper touches the cube while the cube is off the table, and ends the episode at that moment. A fingertip touch counts the same as a full two-handed grasp, so the success rate is optimistic compared with a completed handover. All policies and conditions are scored with the same rule. For Insertion, an episode counts as a success when the peg touches the pin inside the socket.
@@ -192,8 +229,9 @@ bash eval/evaluate.sh outputs/models/act_aloha_sim_insertion_human_migrated Aloh
 
 # 4. train ACT: open notebooks/train_colab.ipynb in Google Colab (T4)
 
-# 5. evaluate the trained model (50 episodes, about 42 min on a GTX 1650)
+# 5. evaluate the trained models (50 episodes each, about 42 and 52 min on a GTX 1650)
 bash eval/evaluate.sh Wolvered/act_aloha_transfer_cube AlohaTransferCube-v0 phase2_act_own_transfer_cube
+bash eval/evaluate.sh Wolvered/act_aloha_insertion AlohaInsertion-v0 phase3_act_own_insertion
 
 # optional: look at the scene, or watch the policy live (needs a display)
 bash scripts/view_scene.sh
