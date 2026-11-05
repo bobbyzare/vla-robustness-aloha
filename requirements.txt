@@ -1,0 +1,13 @@
+# Python 3.12 (the ALOHA simulator needs labmaze, which has packages only up to 3.12).
+#
+# LeRobot is pinned to the commit used for all training and evaluation in this project,
+# because its commands and checkpoint formats change between versions.
+# Extras:
+#   training     W&B logging and accelerate
+#   evaluation   video writing for lerobot-eval
+#   dataset_viz  dataset viewer
+#   aloha        gym-aloha, the MuJoCo ALOHA simulator
+#   smolvla      transformers and friends, needed by the SmolVLA policy
+# Everything the scripts in this repository import (torch, mujoco, gymnasium, gym_aloha,
+# imageio, numpy) is installed through LeRobot and these extras.
+lerobot[training,evaluation,dataset_viz,aloha,smolvla] @ git+https://github.com/huggingface/lerobot.git@8c920c4270460851cedd2737657584586d3dc66f

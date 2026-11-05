@@ -205,15 +205,18 @@ analysis/results/         raw evaluation outputs (every reported number comes fr
 media/                    GIFs (and later plots) for this README
 perturbations/            visual scene changes (planned)
 notebooks/
-  train_colab.ipynb       train ACT in Google Colab, checkpoints pushed to the Hub
+  train_colab.ipynb       train ACT or SmolVLA in Google Colab, checkpoints pushed to the Hub
+requirements.txt          Python packages (LeRobot pinned to the commit used here)
 ```
 
 ## How to reproduce
 
-Requirements: Linux or WSL2, an NVIDIA GPU, conda, and LeRobot installed from source with the `aloha` extra.
+Requirements: Linux or WSL2, an NVIDIA GPU and conda. All Python packages are listed in `requirements.txt` (LeRobot pinned to the commit below, with the extras this project needs).
 
 ```bash
+conda create -n lerobot python=3.12
 conda activate lerobot
+pip install -r requirements.txt
 
 # 1. check the setup
 MUJOCO_GL=egl python scripts/check_setup.py
