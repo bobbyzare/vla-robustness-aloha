@@ -12,7 +12,7 @@
 #
 # Usage:
 #   conda activate lerobot && unset PYTHONPATH
-#   bash eval/evaluate.sh <policy> <task> <run_name> [episodes]
+#   bash eval/evaluate.sh <policy> <task> <run_name> [episodes] [extra lerobot-eval args ...]
 #
 #   <policy>    Hugging Face repo (e.g. Wolvered/act_aloha_transfer_cube) or a
 #               local folder with config.json + model.safetensors. A Hub model is
@@ -20,9 +20,19 @@
 #   <task>      AlohaTransferCube-v0 or AlohaInsertion-v0
 #   <run_name>  name of the output folder, e.g. phase2_act_own_transfer_cube
 #   [episodes]  default 50 (the full evaluation); use 2 for a quick test
+#   [extra ...] passed on to lerobot-eval unchanged. SmolVLA needs the camera rename it
+#               was trained with, because lerobot-eval replaces the saved one with its own
+#               (empty by default):
+#               '--rename_map={"observation.images.top": "observation.images.camera1"}'
 #
-# Example:
+# The evaluation runs through eval/lerobot_eval_task.py, which is lerobot-eval plus the
+# dataset's task instruction (gym-aloha only provides the short task name). ACT ignores
+# the instruction; SmolVLA needs it.
+#
+# Examples:
 #   bash eval/evaluate.sh Wolvered/act_aloha_transfer_cube AlohaTransferCube-v0 phase2_act_own_transfer_cube 2
+#   bash eval/evaluate.sh Wolvered/smolvla_aloha_insertion AlohaInsertion-v0 phase4_smolvla_insertion 2 \
+#       '--rename_map={"observation.images.top": "observation.images.camera1"}'
 #
 # Checked against LeRobot commit 8c920c42 (`lerobot-eval --help`).
 
@@ -37,6 +47,7 @@ POLICY="$1"
 TASK="$2"
 RUN_NAME="$3"
 N_EPISODES="${4:-50}"
+EXTRA_ARGS=("${@:5}")   # everything after the 4th argument
 
 # 2. Only accept the two ALOHA tasks. A typo would otherwise make LeRobot fail
 #    late, or (with no --env.task at all) silently use its default task, Insertion.
@@ -64,7 +75,7 @@ export MUJOCO_GL=egl
 #    --policy.use_amp=false: full fp32 precision, no mixed-precision differences.
 #    --seed=1000: fixed randomness, so every policy sees the same object positions.
 echo "Evaluating $POLICY on $TASK for $N_EPISODES episodes -> $OUTPUT_DIR"
-time lerobot-eval \
+time python "$(dirname "$0")/lerobot_eval_task.py" \
     --policy.path="$POLICY" \
     --env.type=aloha \
     --env.task="$TASK" \
@@ -73,7 +84,8 @@ time lerobot-eval \
     --policy.device=cuda \
     --policy.use_amp=false \
     --seed=1000 \
-    --output_dir="$OUTPUT_DIR"
+    --output_dir="$OUTPUT_DIR" \
+    "${EXTRA_ARGS[@]}"
 
 # 6. Print the headline numbers from the result file.
 python - "$OUTPUT_DIR/eval_info.json" <<'EOF'
